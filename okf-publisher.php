@@ -1,8 +1,8 @@
-<?php
+﻿<?php
 /**
  * Plugin Name:       OKF Publisher
  * Description:       Mengekspor konten WordPress menjadi bundle Open Knowledge Format (OKF v0.1) yang tersaji di /okf/ untuk dikonsumsi aplikasi AI.
- * Version:           0.1.1
+ * Version:           0.2.0
  * Author:            Sitespirit
  * Requires at least: 6.2
  * Requires PHP:      8.0
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'OKF_VERSION', '0.1.1' );
+define( 'OKF_VERSION', '0.2.0' );
 define( 'OKF_PLUGIN_DIR', __DIR__ );
 
 require_once OKF_PLUGIN_DIR . '/includes/class-okf-markdown.php';
@@ -32,7 +32,7 @@ final class OKF_Publisher {
 
 	private function __construct() {
 		add_action( 'init', [ $this, 'add_rewrite' ] );
-		add_filter( 'query_vars', fn( $vars ) => array_merge( $vars, [ 'okf_path' ] ) );
+		add_filter( 'query_vars', fn( $vars ) => array_merge( $vars, [ 'okf_path', 'okf_llms' ] ) );
 		add_action( 'template_redirect', [ $this, 'maybe_serve' ] );
 
 		add_action( 'transition_post_status', [ $this, 'on_status_change' ], 10, 3 );
@@ -59,6 +59,7 @@ final class OKF_Publisher {
 			'site_description' => '',
 			'api_key'          => '',
 			'enable_log'       => false,
+			'enable_llms'      => false,
 		] );
 	}
 
@@ -75,6 +76,13 @@ final class OKF_Publisher {
 
 	public function add_rewrite(): void {
 		add_rewrite_rule( '^okf/?(.*)$', 'index.php?okf_path=$matches[1]', 'top' );
+		add_rewrite_rule( '^llms\.txt$', 'index.php?okf_llms=1', 'top' );
+
+		// Flush otomatis sekali setiap update versi â€” tanpa perlu re-save permalink manual.
+		if ( get_option( 'okf_version' ) !== OKF_VERSION ) {
+			flush_rewrite_rules();
+			update_option( 'okf_version', OKF_VERSION, false );
+		}
 	}
 
 	public function activate(): void {
@@ -85,6 +93,12 @@ final class OKF_Publisher {
 
 	public function maybe_serve(): void {
 		global $wp_query;
+
+		if ( get_query_var( 'okf_llms' ) ) {
+			$this->serve_llms();
+			return;
+		}
+
 		if ( ! array_key_exists( 'okf_path', $wp_query->query_vars ) ) {
 			return;
 		}
@@ -102,7 +116,7 @@ final class OKF_Publisher {
 		if ( $rel === '' ) {
 			$rel = 'index.md';
 		} elseif ( ! str_ends_with( $rel, '.md' ) ) {
-			$rel .= '/index.md'; // URL direktori → index-nya.
+			$rel .= '/index.md'; // URL direktori â†’ index-nya.
 		}
 
 		// Hanya file .md, tanpa path traversal.
@@ -122,6 +136,22 @@ final class OKF_Publisher {
 		header( 'Content-Type: text/markdown; charset=utf-8' );
 		header( 'Content-Length: ' . filesize( $real ) );
 		readfile( $real );
+		exit;
+	}
+
+	/** llms.txt penunjuk ke bundle â€” hanya bila diaktifkan dan bundle publik (PRD Â§9.5). */
+	private function serve_llms(): void {
+		$s = self::settings();
+		if ( empty( $s['enable_llms'] ) || $s['api_key'] !== '' ) {
+			return; // biarkan WP 404 / handler lain mengambil alih
+		}
+		$desc = $s['site_description'] ?: get_bloginfo( 'description' );
+		nocache_headers();
+		header( 'Content-Type: text/plain; charset=utf-8' );
+		echo '# ' . get_bloginfo( 'name' ) . "\n\n"
+			. ( $desc ? '> ' . $desc . "\n\n" : '' )
+			. "## Knowledge base\n\n"
+			. '- [Bundle OKF](' . home_url( '/okf/index.md' ) . "): Seluruh konten situs dalam Open Knowledge Format (markdown + YAML frontmatter)\n";
 		exit;
 	}
 

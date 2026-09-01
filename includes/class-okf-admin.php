@@ -38,6 +38,7 @@ class OKF_Admin {
 			'site_description' => sanitize_textarea_field( $input['site_description'] ?? '' ),
 			'api_key'          => sanitize_text_field( $input['api_key'] ?? '' ),
 			'enable_log'       => ! empty( $input['enable_log'] ),
+			'enable_llms'      => ! empty( $input['enable_llms'] ),
 		];
 	}
 
@@ -137,6 +138,16 @@ class OKF_Admin {
 							<input type="text" id="okf_key" name="okf_settings[api_key]" class="regular-text"
 								value="<?php echo esc_attr( $s['api_key'] ); ?>">
 							<p class="description">Kosongkan untuk akses publik. Bila diisi, konsumen wajib mengirim header <code>X-OKF-Key</code>.</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Discoverability</th>
+						<td>
+							<label>
+								<input type="checkbox" name="okf_settings[enable_llms]" value="1" <?php checked( $s['enable_llms'] ); ?>>
+								Tayangkan <code>/llms.txt</code> yang menunjuk ke bundle OKF
+							</label>
+							<p class="description">Hanya aktif bila bundle publik (API key kosong). Jangan aktifkan bila plugin lain (mis. SEO plugin) sudah menyajikan llms.txt.</p>
 						</td>
 					</tr>
 					<tr>

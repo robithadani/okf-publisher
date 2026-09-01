@@ -15,6 +15,10 @@ Setelah build awal, bundle ter-update otomatis setiap kali konten disimpan, di-u
 
 Beri aplikasi AI klien satu URL: `https://situs.com/okf/index.md`. Agent membaca index, lalu menelusuri link markdown antar-dokumen. Bila API key diisi di setting, konsumen wajib mengirim header `X-OKF-Key: <key>`.
 
+## Discoverability (opsional)
+
+Centang **Tayangkan /llms.txt** di setting untuk menyajikan `https://situs.com/llms.txt` berisi penunjuk ke bundle OKF, agar agent pihak ketiga menemukannya. Hanya berlaku bila bundle publik (API key kosong); jangan aktifkan bila plugin SEO lain sudah menyajikan llms.txt.
+
 ## Perintah WP-CLI
 
 ```
