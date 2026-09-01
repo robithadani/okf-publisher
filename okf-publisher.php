@@ -78,7 +78,7 @@ final class OKF_Publisher {
 		add_rewrite_rule( '^okf/?(.*)$', 'index.php?okf_path=$matches[1]', 'top' );
 		add_rewrite_rule( '^llms\.txt$', 'index.php?okf_llms=1', 'top' );
 
-		// Flush otomatis sekali setiap update versi â€” tanpa perlu re-save permalink manual.
+		// Flush otomatis sekali setiap update versi, tanpa perlu re-save permalink manual.
 		if ( get_option( 'okf_version' ) !== OKF_VERSION ) {
 			flush_rewrite_rules();
 			update_option( 'okf_version', OKF_VERSION, false );
@@ -116,7 +116,7 @@ final class OKF_Publisher {
 		if ( $rel === '' ) {
 			$rel = 'index.md';
 		} elseif ( ! str_ends_with( $rel, '.md' ) ) {
-			$rel .= '/index.md'; // URL direktori â†’ index-nya.
+			$rel .= '/index.md'; // URL direktori: sajikan index-nya.
 		}
 
 		// Hanya file .md, tanpa path traversal.
@@ -139,7 +139,7 @@ final class OKF_Publisher {
 		exit;
 	}
 
-	/** llms.txt penunjuk ke bundle â€” hanya bila diaktifkan dan bundle publik (PRD Â§9.5). */
+	/** llms.txt penunjuk ke bundle, hanya bila diaktifkan dan bundle publik (PRD 9.5). */
 	private function serve_llms(): void {
 		$s = self::settings();
 		if ( empty( $s['enable_llms'] ) || $s['api_key'] !== '' ) {
