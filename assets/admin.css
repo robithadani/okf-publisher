@@ -63,3 +63,12 @@
 @media (prefers-reduced-motion: no-preference) {
 	.okf-node { transition: background-color 0.12s ease; }
 }
+
+.okf-badge { display: inline-block; }
+.okf-badge--off { background: #f0f0f1; color: #50575e; }
+.column-okf { width: 130px; }
+.okf-cell { white-space: nowrap; }
+.okf-box details { margin: 0 0 12px; }
+.okf-box summary { cursor: pointer; margin-bottom: 6px; }
+.okf-box .okf-fm { max-height: 200px; margin: 0; }
+.okf-box .description code { word-break: break-all; }

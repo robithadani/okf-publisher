@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       OKF Publisher
  * Description:       Mengekspor konten WordPress menjadi bundle Open Knowledge Format (OKF v0.1) yang tersaji di /okf/ untuk dikonsumsi aplikasi AI.
- * Version:           0.4.0
+ * Version:           0.5.0
  * Update URI:        https://github.com/robithadani/okf-publisher
  * Author:            Sitespirit
  * Requires at least: 6.2
@@ -13,13 +13,14 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'OKF_VERSION', '0.4.0' );
+define( 'OKF_VERSION', '0.5.0' );
 define( 'OKF_PLUGIN_FILE', __FILE__ );
 define( 'OKF_PLUGIN_DIR', __DIR__ );
 
 require_once OKF_PLUGIN_DIR . '/includes/class-okf-markdown.php';
 require_once OKF_PLUGIN_DIR . '/includes/class-okf-generator.php';
 require_once OKF_PLUGIN_DIR . '/includes/class-okf-admin.php';
+require_once OKF_PLUGIN_DIR . '/includes/class-okf-editor.php';
 
 final class OKF_Publisher {
 
@@ -36,12 +37,14 @@ final class OKF_Publisher {
 		add_action( 'init', [ $this, 'add_rewrite' ] );
 		add_filter( 'query_vars', fn( $vars ) => array_merge( $vars, [ 'okf_path', 'okf_llms' ] ) );
 		add_action( 'template_redirect', [ $this, 'maybe_serve' ] );
+		add_filter( 'redirect_canonical', [ $this, 'skip_canonical' ] );
 
 		add_action( 'transition_post_status', [ $this, 'on_status_change' ], 10, 3 );
 		add_action( 'deleted_post', [ $this, 'on_delete' ], 10, 2 );
 		add_action( 'shutdown', [ $this, 'flush_queue' ] );
 
 		new OKF_Admin();
+		new OKF_Editor();
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once OKF_PLUGIN_DIR . '/includes/class-okf-cli.php';
@@ -198,6 +201,16 @@ final class OKF_Publisher {
 	}
 
 	/* ---------- Sinkronisasi incremental ---------- */
+
+	/** URL file (mis. /okf/index.md) tidak boleh dialihkan ke versi ber-slash: curl dan klien lain tidak mengikuti redirect. */
+	public function skip_canonical( $redirect ) {
+		return ( get_query_var( 'okf_path', null ) !== null || get_query_var( 'okf_llms', null ) !== null ) ? false : $redirect;
+	}
+
+	/** Jadwalkan regenerasi satu post pada akhir request (dipakai panel editor). */
+	public function enqueue( int $post_id ): void {
+		$this->queue[ $post_id ] = true;
+	}
 
 	public function on_status_change( string $new, string $old, WP_Post $post ): void {
 		if ( ! in_array( $post->post_type, self::settings()['post_types'], true ) ) {

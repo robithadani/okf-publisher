@@ -162,6 +162,17 @@ class OKF_Admin {
 	}
 
 
+	/** Selisih waktu dalam bahasa Indonesia, tidak bergantung bahasa situs. */
+	private static function ago( int $ts ): string {
+		$d = max( 0, time() - $ts );
+		foreach ( [ [ 86400, 'hari' ], [ 3600, 'jam' ], [ 60, 'menit' ] ] as [ $sec, $unit ] ) {
+			if ( $d >= $sec ) {
+				return (int) floor( $d / $sec ) . ' ' . $unit . ' lalu';
+			}
+		}
+		return 'baru saja';
+	}
+
 	public function render(): void {
 		$s       = OKF_Publisher::settings();
 		$st      = OKF_Publisher::generator()->stats();
@@ -222,7 +233,7 @@ class OKF_Admin {
 				<?php endforeach; ?>
 				<div class="okf-stat">
 					<span class="okf-stat-label">Terakhir berubah</span>
-					<span class="okf-stat-value okf-stat-value--sm"><?php echo $st['updated'] ? esc_html( human_time_diff( $st['updated'], time() ) . ' lalu' ) : '–'; ?></span>
+					<span class="okf-stat-value okf-stat-value--sm"><?php echo $st['updated'] ? esc_html( self::ago( $st['updated'] ) ) : '–'; ?></span>
 				</div>
 				<div class="okf-stat">
 					<span class="okf-stat-label">Akses</span>

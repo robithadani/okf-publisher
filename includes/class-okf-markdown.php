@@ -27,6 +27,7 @@ class OKF_Markdown {
 		$md   = $body ? self::walk( $body ) : wp_strip_all_tags( $html );
 
 		// Rapikan: maksimal satu baris kosong beruntun.
+		$md = preg_replace( '/ +$/m', '', $md );
 		return trim( preg_replace( "/\n{3,}/", "\n\n", $md ) ) . "\n";
 	}
 

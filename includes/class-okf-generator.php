@@ -20,6 +20,7 @@ class OKF_Generator {
 			return false;
 		}
 		if ( apply_filters( 'okf_exclude_post', false, $post ) ) {
+			$this->delete_post_file( $post ); // post yang baru dikecualikan harus hilang dari bundle
 			return false;
 		}
 
@@ -116,6 +117,7 @@ class OKF_Generator {
 			'timestamp'   => gmdate( 'c' ),
 		];
 
+		update_meta_cache( 'post', $ids ); // satu query untuk meta semua post (dipakai filter pengecualian)
 		$body = '# ' . $obj->labels->name . "\n\n";
 		foreach ( $ids as $id ) {
 			$p = get_post( $id );
@@ -132,9 +134,15 @@ class OKF_Generator {
 
 	/** Bersihkan bundle lama, kembalikan total post yang akan diproses. */
 	public function prepare_rebuild(): int {
+		$log = $this->base_dir . '/log.md';
+		$old = is_file( $log ) ? file_get_contents( $log ) : null; // riwayat perubahan harus selamat dari rebuild
 		$this->rrmdir( $this->base_dir );
 		$this->rrmdir( dirname( $this->base_dir ) . '/okf' ); // sisa folder versi lama (URL-nya bisa ditebak)
 		wp_mkdir_p( $this->base_dir );
+		if ( $old !== null ) {
+			$this->protect();
+			file_put_contents( $log, $old );
+		}
 		return count( $this->post_ids() );
 	}
 
@@ -222,6 +230,9 @@ class OKF_Generator {
 			return [ 'Bundle kosong — jalankan rebuild terlebih dahulu.' ];
 		}
 		foreach ( $files as $file ) {
+			if ( basename( $file ) === 'log.md' ) {
+				continue; // jurnal append-only, bukan dokumen konsep
+			}
 			$rel     = ltrim( str_replace( [ $this->base_dir, '\\' ], [ '', '/' ], $file ), '/' );
 			$content = (string) file_get_contents( $file );
 			if ( ! preg_match( '/^---\n(.*?)\n---\n/s', $content, $m ) ) {
@@ -251,7 +262,8 @@ class OKF_Generator {
 	}
 
 	private function description( WP_Post $post ): string {
-		$text = $post->post_excerpt ?: wp_strip_all_tags( strip_shortcodes( $post->post_content ) );
+		$html = preg_replace( '#(</(p|h[1-6]|li|div|tr|td|th|blockquote|figcaption|ul|ol)>|<br */?>)#i', '$0 ', $post->post_content );
+		$text = $post->post_excerpt ?: wp_strip_all_tags( strip_shortcodes( $html ) );
 		$text = preg_replace( '/\s+/u', ' ', trim( $text ) );
 		return mb_strlen( $text ) > 155 ? mb_substr( $text, 0, 152 ) . '…' : $text;
 	}
@@ -317,11 +329,15 @@ class OKF_Generator {
 			return;
 		}
 		$this->protect();
-		file_put_contents(
-			$this->base_dir . '/log.md',
-			'- ' . gmdate( 'c' ) . ' — ' . $line . "\n",
-			FILE_APPEND
-		);
+		$file = $this->base_dir . '/log.md';
+		if ( ! is_file( $file ) ) {
+			file_put_contents( $file, implode( "\n", [ '---', 'type: "Log"', 'title: "Riwayat perubahan"', '---', '', '' ] ) );
+		} elseif ( filesize( $file ) > 262144 ) {
+			// ponytail: batas 256 KB; simpan header + 1000 baris terakhir, tanpa rotasi arsip
+			$lines = file( $file, FILE_IGNORE_NEW_LINES );
+			file_put_contents( $file, implode( "\n", array_merge( array_slice( $lines, 0, 5 ), array_slice( $lines, -1000 ) ) ) . "\n" );
+		}
+		file_put_contents( $file, '- ' . gmdate( 'c' ) . ' — ' . $line . "\n", FILE_APPEND );
 	}
 
 	private function all_md_files( string $dir ): array {
@@ -356,6 +372,9 @@ class OKF_Generator {
 	private function yaml( array $fm ): string {
 		$out = "---\n";
 		foreach ( $fm as $k => $v ) {
+			if ( $k !== 'type' && ( $v === '' || $v === [] || $v === null ) ) {
+				continue;
+			}
 			if ( is_array( $v ) ) {
 				$out .= $k . ': [' . implode( ', ', array_map( [ $this, 'yaml_scalar' ], $v ) ) . "]\n";
 			} else {

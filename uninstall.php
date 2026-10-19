@@ -27,3 +27,4 @@ foreach ( [ 'okf_settings', 'okf_status', 'okf_version', 'okf_dir' ] as $opt ) {
 	delete_option( $opt );
 }
 delete_post_meta_by_key( '_okf_path' );
+delete_post_meta_by_key( '_okf_exclude' );

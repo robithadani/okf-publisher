@@ -76,7 +76,8 @@
 					progress.textContent = Math.min(offset, init.total) + '/' + init.total + ' dokumen…';
 				}
 				await step({ step: 'finish', written: written });
-				progress.textContent = 'Selesai: ' + written + ' dokumen ditulis.';
+				const skipped = init.total - written;
+				progress.textContent = 'Selesai: ' + written + ' dokumen ditulis' + (skipped > 0 ? ', ' + skipped + ' dikecualikan.' : '.');
 				setTimeout(function () { location.reload(); }, 1000);
 			} catch (e) {
 				progress.textContent = 'Gagal: ' + e.message + '. Coba ulangi, atau jalankan wp okf rebuild.';

@@ -20,6 +20,11 @@ Halaman pengaturan dirancang agar konsep OKF mudah dipahami:
 - **Penjelajah bundle**: telusuri `index.md` dan folder, lalu lihat isi dokumen persis seperti yang dibaca AI (frontmatter dan isi diberi warna berbeda). Hanya baca, khusus admin.
 - **Hubungkan ke aplikasi AI**: URL bundle, perintah `curl`, dan perintah MCP yang sudah terisi alamat situs, masing-masing dengan tombol Salin.
 
+## Di layar WordPress biasa
+
+- **Kolom OKF** di daftar post/halaman: Di bundle, Dikecualikan, Belum terbit, atau Belum masuk, plus link ke versi OKF-nya.
+- **Panel OKF di editor**: status, path, link, frontmatter persis seperti yang dibaca AI, dan kotak **Kecualikan dari bundle OKF**. Post yang dikecualikan dihapus dari bundle dan index saat disimpan.
+
 ## Konsumsi oleh aplikasi AI
 
 Beri aplikasi AI klien satu URL: `https://situs.com/okf/index.md`. Agent membaca index, lalu menelusuri link markdown antar-dokumen. Bila API key diisi di setting, konsumen wajib mengirim header `X-OKF-Key: <key>`.
