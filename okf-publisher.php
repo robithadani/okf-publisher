@@ -2,7 +2,8 @@
 /**
  * Plugin Name:       OKF Publisher
  * Description:       Mengekspor konten WordPress menjadi bundle Open Knowledge Format (OKF v0.1) yang tersaji di /okf/ untuk dikonsumsi aplikasi AI.
- * Version:           0.2.1
+ * Version:           0.3.0
+ * Update URI:        https://github.com/robithadani/okf-publisher
  * Author:            Sitespirit
  * Requires at least: 6.2
  * Requires PHP:      8.0
@@ -12,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'OKF_VERSION', '0.2.1' );
+define( 'OKF_VERSION', '0.3.0' );
 define( 'OKF_PLUGIN_DIR', __DIR__ );
 
 require_once OKF_PLUGIN_DIR . '/includes/class-okf-markdown.php';
@@ -63,8 +64,21 @@ final class OKF_Publisher {
 		] );
 	}
 
+	/** Folder bundle memakai token acak, agar URL file langsung tidak bisa ditebak (lapis kedua selain .htaccess). */
 	public static function base_dir(): string {
-		return wp_upload_dir()['basedir'] . '/okf';
+		$uploads = wp_upload_dir()['basedir'];
+		$token   = get_option( 'okf_dir' );
+		if ( ! $token ) {
+			$token = bin2hex( random_bytes( 12 ) );
+			if ( add_option( 'okf_dir', $token, '', false ) ) {
+				if ( is_dir( $uploads . '/okf' ) ) {
+					@rename( $uploads . '/okf', $uploads . '/okf-' . $token ); // migrasi dari versi lama
+				}
+			} else {
+				$token = get_option( 'okf_dir' ); // request lain menang balapan
+			}
+		}
+		return $uploads . '/okf-' . $token;
 	}
 
 	public static function generator(): OKF_Generator {
@@ -88,6 +102,7 @@ final class OKF_Publisher {
 		if ( get_option( 'okf_version' ) !== $sig ) {
 			flush_rewrite_rules();
 			update_option( 'okf_version', $sig, false );
+			self::generator()->protect();
 		}
 	}
 
@@ -111,7 +126,7 @@ final class OKF_Publisher {
 
 		$key = self::settings()['api_key'];
 		if ( $key !== '' ) {
-			$given = $_SERVER['HTTP_X_OKF_KEY'] ?? ( $_GET['key'] ?? '' );
+			$given = $_SERVER['HTTP_X_OKF_KEY'] ?? ''; // hanya header: parameter URL tercatat di access log
 			if ( ! is_string( $given ) || ! hash_equals( $key, $given ) ) {
 				status_header( 401 );
 				exit( 'OKF: API key tidak valid.' );
@@ -133,13 +148,20 @@ final class OKF_Publisher {
 
 		$file = self::base_dir() . '/' . $rel;
 		$real = realpath( $file );
-		if ( $real === false || ! str_starts_with( $real, realpath( self::base_dir() ) ) ) {
+		$root = realpath( self::base_dir() );
+		if ( $real === false || $root === false || ! str_starts_with( $real, $root . DIRECTORY_SEPARATOR ) ) {
 			status_header( 404 );
 			exit( 'OKF: not found.' );
 		}
 
 		nocache_headers();
 		header( 'Content-Type: text/markdown; charset=utf-8' );
+		header( 'X-Content-Type-Options: nosniff' );
+		// Bundle bukan halaman untuk mesin pencari (duplikat konten). Kosongkan lewat filter bila ingin diindeks.
+		$robots = apply_filters( 'okf_robots_header', 'noindex, nofollow' );
+		if ( $robots ) {
+			header( 'X-Robots-Tag: ' . $robots );
+		}
 		header( 'Content-Length: ' . filesize( $real ) );
 		readfile( $real );
 		exit;

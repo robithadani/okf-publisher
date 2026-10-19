@@ -133,6 +133,7 @@ class OKF_Generator {
 	/** Bersihkan bundle lama, kembalikan total post yang akan diproses. */
 	public function prepare_rebuild(): int {
 		$this->rrmdir( $this->base_dir );
+		$this->rrmdir( dirname( $this->base_dir ) . '/okf' ); // sisa folder versi lama (URL-nya bisa ditebak)
 		wp_mkdir_p( $this->base_dir );
 		return count( $this->post_ids() );
 	}
@@ -262,7 +263,22 @@ class OKF_Generator {
 
 	/* ---------- Helper file ---------- */
 
+	/** Tolak akses langsung ke file bundle (Apache/LiteSpeed). Di nginx, perlindungan utama adalah nama folder ber-token acak. */
+	public function protect(): void {
+		$ht = $this->base_dir . '/.htaccess';
+		if ( file_exists( $ht ) ) {
+			return;
+		}
+		wp_mkdir_p( $this->base_dir );
+		file_put_contents( $ht, implode( PHP_EOL, [
+			'<IfModule mod_authz_core.c>', 'Require all denied', '</IfModule>',
+			'<IfModule !mod_authz_core.c>', 'Deny from all', '</IfModule>',
+		] ) . PHP_EOL );
+		file_put_contents( $this->base_dir . '/index.php', '<?php // Silence is golden.' . PHP_EOL );
+	}
+
 	private function write( string $rel, string $content ): void {
+		$this->protect();
 		$file = $this->base_dir . '/' . $rel;
 		wp_mkdir_p( dirname( $file ) );
 		file_put_contents( $file, $content );
@@ -272,7 +288,7 @@ class OKF_Generator {
 		if ( empty( $this->settings['enable_log'] ) ) {
 			return;
 		}
-		wp_mkdir_p( $this->base_dir );
+		$this->protect();
 		file_put_contents(
 			$this->base_dir . '/log.md',
 			'- ' . gmdate( 'c' ) . ' — ' . $line . "\n",

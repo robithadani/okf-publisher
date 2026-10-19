@@ -26,6 +26,12 @@ class OKF_Admin {
 
 	public function sanitize( $input ): array {
 		$input = is_array( $input ) ? $input : [];
+
+		$key = trim( sanitize_text_field( $input['api_key'] ?? '' ) );
+		if ( $key !== '' && strlen( $key ) < 16 ) {
+			add_settings_error( 'okf_settings', 'okf_key_short', 'API key minimal 16 karakter, jadi key sebelumnya dipertahankan. Gunakan tombol "Buat key acak".' );
+			$key = OKF_Publisher::settings()['api_key'];
+		}
 		return [
 			'post_types'       => array_values( array_intersect(
 				array_map( 'sanitize_key', (array) ( $input['post_types'] ?? [] ) ),
@@ -36,7 +42,7 @@ class OKF_Admin {
 				get_taxonomies( [ 'public' => true ] )
 			) ),
 			'site_description' => sanitize_textarea_field( $input['site_description'] ?? '' ),
-			'api_key'          => sanitize_text_field( $input['api_key'] ?? '' ),
+			'api_key'          => $key,
 			'enable_log'       => ! empty( $input['enable_log'] ),
 			'enable_llms'      => ! empty( $input['enable_llms'] ),
 		];
@@ -135,9 +141,10 @@ class OKF_Admin {
 					<tr>
 						<th scope="row"><label for="okf_key">API key</label></th>
 						<td>
-							<input type="text" id="okf_key" name="okf_settings[api_key]" class="regular-text"
-								value="<?php echo esc_attr( $s['api_key'] ); ?>">
-							<p class="description">Kosongkan untuk akses publik. Bila diisi, konsumen wajib mengirim header <code>X-OKF-Key</code>.</p>
+							<input type="text" id="okf_key" name="okf_settings[api_key]" class="regular-text" autocomplete="off" spellcheck="false"
+								aria-describedby="okf_key_desc" value="<?php echo esc_attr( $s['api_key'] ); ?>">
+							<button type="button" class="button" id="okf-genkey">Buat key acak</button>
+							<p class="description" id="okf_key_desc">Kosongkan untuk akses publik. Bila diisi (minimal 16 karakter), konsumen wajib mengirim header <code>X-OKF-Key</code>; parameter URL tidak didukung agar key tidak tercatat di log. Klik Simpan setelah membuat key.</p>
 						</td>
 					</tr>
 					<tr>
@@ -175,6 +182,11 @@ class OKF_Admin {
 				const btn   = document.getElementById('okf-rebuild');
 				const out   = document.getElementById('okf-progress');
 				const nonce = '<?php echo esc_js( wp_create_nonce( 'okf_rebuild' ) ); ?>';
+
+				document.getElementById('okf-genkey').addEventListener('click', function () {
+					const b = crypto.getRandomValues(new Uint8Array(24));
+					document.getElementById('okf_key').value = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+				});
 
 				async function call(data) {
 					const body = new URLSearchParams({ action: 'okf_rebuild', _ajax_nonce: nonce, ...data });

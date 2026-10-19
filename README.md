@@ -15,6 +15,14 @@ Setelah build awal, bundle ter-update otomatis setiap kali konten disimpan, di-u
 
 Beri aplikasi AI klien satu URL: `https://situs.com/okf/index.md`. Agent membaca index, lalu menelusuri link markdown antar-dokumen. Bila API key diisi di setting, konsumen wajib mengirim header `X-OKF-Key: <key>`.
 
+## Keamanan
+
+- **API key** (opsional): bila diisi (minimal 16 karakter; tombol "Buat key acak" tersedia), konsumen wajib mengirim header `X-OKF-Key`. Parameter `?key=` sengaja tidak didukung karena tercatat di access log.
+- **Folder bundle ber-token acak** (`wp-content/uploads/okf-<token>/`) dengan `.htaccess` penolak akses langsung, sehingga file tidak bisa dibuka lewat URL `uploads/` dan melewati pengecekan key. Di nginx, `.htaccess` diabaikan; nama folder acak menjadi perlindungan utamanya. Pembaruan dari v0.1/0.2 memindahkan folder lama otomatis.
+- Respons bundle membawa `X-Robots-Tag: noindex, nofollow` agar tidak terindeks sebagai duplikat konten. Ubah lewat filter `okf_robots_header` (kembalikan string kosong untuk mematikan).
+- Header `Update URI` menunjuk ke repo ini, sehingga WordPress tidak menawarkan update dari plugin lain di wordpress.org yang kebetulan bernama sama.
+- Belum ditangani: post berpassword dan konten khusus member ikut terekspor sebagai konten publik.
+
 ## Discoverability (opsional)
 
 Centang **Tayangkan /llms.txt** di setting untuk menyajikan `https://situs.com/llms.txt` berisi penunjuk ke bundle OKF, agar agent pihak ketiga menemukannya. Hanya berlaku bila bundle publik (API key kosong); jangan aktifkan bila plugin SEO lain sudah menyajikan llms.txt.

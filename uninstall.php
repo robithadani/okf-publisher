@@ -5,14 +5,14 @@
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-delete_option( 'okf_settings' );
-delete_option( 'okf_status' );
-delete_option( 'okf_version' );
-delete_post_meta_by_key( '_okf_path' );
+$uploads = wp_upload_dir()['basedir'];
+$token   = get_option( 'okf_dir' );
 
-// Hapus bundle di uploads/okf.
-$dir = wp_upload_dir()['basedir'] . '/okf';
-if ( is_dir( $dir ) ) {
+// Folder bundle ber-token (v0.3+) dan folder lama uploads/okf (v0.1-0.2).
+foreach ( array_filter( [ $token ? $uploads . '/okf-' . $token : '', $uploads . '/okf' ] ) as $dir ) {
+	if ( ! is_dir( $dir ) ) {
+		continue;
+	}
 	$it = new RecursiveIteratorIterator(
 		new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ),
 		RecursiveIteratorIterator::CHILD_FIRST
@@ -22,3 +22,8 @@ if ( is_dir( $dir ) ) {
 	}
 	@rmdir( $dir );
 }
+
+foreach ( [ 'okf_settings', 'okf_status', 'okf_version', 'okf_dir' ] as $opt ) {
+	delete_option( $opt );
+}
+delete_post_meta_by_key( '_okf_path' );
