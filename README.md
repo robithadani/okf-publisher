@@ -11,6 +11,15 @@ Plugin WordPress yang mengekspor konten situs menjadi bundle [Open Knowledge For
 
 Setelah build awal, bundle ter-update otomatis setiap kali konten disimpan, di-unpublish, atau dihapus.
 
+## Halaman Settings → OKF
+
+Halaman pengaturan dirancang agar konsep OKF mudah dipahami:
+
+- **Cara kerja**: alur Konten WordPress → Bundle OKF → Aplikasi AI.
+- **Kartu status**: jumlah dokumen per bagian, waktu perubahan terakhir, dan mode akses, dihitung dari file bundle sungguhan.
+- **Penjelajah bundle**: telusuri `index.md` dan folder, lalu lihat isi dokumen persis seperti yang dibaca AI (frontmatter dan isi diberi warna berbeda). Hanya baca, khusus admin.
+- **Hubungkan ke aplikasi AI**: URL bundle, perintah `curl`, dan perintah MCP yang sudah terisi alamat situs, masing-masing dengan tombol Salin.
+
 ## Konsumsi oleh aplikasi AI
 
 Beri aplikasi AI klien satu URL: `https://situs.com/okf/index.md`. Agent membaca index, lalu menelusuri link markdown antar-dokumen. Bila API key diisi di setting, konsumen wajib mengirim header `X-OKF-Key: <key>`.

@@ -184,6 +184,34 @@ class OKF_Generator {
 		] );
 	}
 
+	/** Ringkasan bundle dari file sungguhan: jumlah dokumen per bagian dan waktu perubahan terakhir. */
+	public function stats(): array {
+		$out = [
+			'exists'   => is_file( $this->base_dir . '/index.md' ),
+			'sections' => [],
+			'total'    => 0,
+			'updated'  => 0,
+		];
+		foreach ( $this->settings['post_types'] as $pt ) {
+			$obj   = get_post_type_object( $pt );
+			$dir   = $this->dir_for( $pt );
+			$abs   = $this->base_dir . '/' . $dir;
+			$count = 0;
+			if ( is_dir( $abs ) ) {
+				foreach ( scandir( $abs ) as $f ) {
+					if ( $f === 'index.md' || ! str_ends_with( $f, '.md' ) ) {
+						continue;
+					}
+					$count++;
+					$out['updated'] = max( $out['updated'], (int) filemtime( $abs . '/' . $f ) );
+				}
+			}
+			$out['sections'][] = [ 'dir' => $dir, 'label' => $obj ? $obj->labels->name : $pt, 'count' => $count ];
+			$out['total']     += $count;
+		}
+		return $out;
+	}
+
 	/* ---------- Validasi ---------- */
 
 	/** @return string[] daftar error, kosong = valid */

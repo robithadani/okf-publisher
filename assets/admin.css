@@ -1,0 +1,65 @@
+.okf-wrap { max-width: 1100px; }
+.okf-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 8px; }
+.okf-head h1 { margin: 0; padding: 0; }
+.okf-head-actions { margin-left: auto; }
+.okf-badge { font-size: 12px; padding: 2px 10px; border-radius: 3px; font-weight: 500; }
+.okf-badge--ok { background: #edfaef; color: #005c12; }
+.okf-badge--warn { background: #fcf9e8; color: #614200; }
+.okf-progress { min-height: 20px; margin: 0 0 8px; font-weight: 500; }
+
+.okf-card { background: #fff; border: 1px solid #c3c4c7; padding: 16px 20px; margin: 0 0 16px; }
+.okf-card h2 { margin: 0 0 12px; padding: 0; font-size: 14px; }
+.okf-card > .description { margin: 12px 0 0; }
+
+.okf-flow { display: grid; grid-template-columns: 1fr 28px 1fr 28px 1fr; align-items: stretch; gap: 8px; }
+.okf-step { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: #f6f7f7; border: 1px solid #dcdcde; }
+.okf-step .dashicons { color: #50575e; margin-bottom: 4px; }
+.okf-step span:last-child { color: #50575e; font-size: 12px; }
+.okf-step--bundle { background: #f0f6fc; border-color: #2271b1; }
+.okf-step--bundle .dashicons { color: #2271b1; }
+.okf-arrow { align-self: center; color: #8c8f94; font-size: 24px; width: 24px; height: 24px; }
+
+.okf-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 16px; }
+.okf-stat { background: #fff; border: 1px solid #c3c4c7; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+.okf-stat-label { font-size: 12px; color: #50575e; }
+.okf-stat-value { font-size: 24px; font-weight: 500; line-height: 1.2; color: #1d2327; }
+.okf-stat-value--sm { font-size: 16px; padding-top: 6px; }
+
+.okf-explorer { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 16px; }
+.okf-tree { max-height: 420px; overflow: auto; border: 1px solid #dcdcde; padding: 4px; background: #f6f7f7; }
+.okf-node { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; border: 0; background: transparent; padding: 5px 8px; font: inherit; font-size: 13px; color: #1d2327; cursor: pointer; border-radius: 2px; }
+.okf-node:hover { background: #e9ecef; }
+.okf-node:focus-visible { outline: 2px solid #2271b1; outline-offset: -2px; }
+.okf-node[aria-current="true"] { background: #f0f6fc; color: #0a4b78; font-weight: 500; }
+.okf-node .okf-count { margin-left: auto; font-size: 12px; color: #646970; }
+.okf-node .dashicons { font-size: 16px; width: 16px; height: 16px; color: #646970; flex: none; }
+.okf-children { padding-left: 14px; }
+.okf-children[hidden] { display: none; }
+.okf-filter { width: calc(100% - 8px); margin: 4px; }
+.okf-muted { color: #646970; padding: 8px; display: block; }
+
+.okf-preview { min-width: 0; }
+.okf-meta { margin: 0 0 8px; font-size: 12px; color: #50575e; }
+.okf-legend { margin: 0 0 4px; font-size: 12px; color: #50575e; }
+.okf-fm, .okf-body { margin: 0 0 12px; padding: 10px 12px; white-space: pre-wrap; word-break: break-word; overflow: auto; font-size: 12px; line-height: 1.6; font-family: Consolas, Monaco, monospace; }
+.okf-fm { background: #f0f6fc; border: 1px solid #b6d4ec; color: #0a4b78; max-height: 180px; }
+.okf-body { background: #f6f7f7; border: 1px solid #dcdcde; color: #1d2327; max-height: 260px; }
+
+.okf-copy-row { margin: 0 0 14px; }
+.okf-copy-label { font-size: 12px; color: #50575e; margin-bottom: 4px; }
+.okf-copy-line { display: flex; align-items: center; gap: 8px; }
+.okf-copy-line code { flex: 1; min-width: 0; padding: 8px 12px; background: #f6f7f7; border: 1px solid #dcdcde; overflow-x: auto; white-space: nowrap; font-size: 12px; }
+.okf-copy-row .description { margin: 4px 0 0; }
+
+.okf-form h2 { font-size: 16px; margin: 24px 0 0; padding-top: 16px; border-top: 1px solid #dcdcde; }
+.okf-check { display: block; margin-bottom: 4px; }
+
+@media (max-width: 782px) {
+	.okf-flow { grid-template-columns: 1fr; }
+	.okf-arrow { transform: rotate(90deg); justify-self: center; }
+	.okf-explorer { grid-template-columns: 1fr; }
+	.okf-head-actions { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+	.okf-node { transition: background-color 0.12s ease; }
+}

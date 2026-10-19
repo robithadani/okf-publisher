@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       OKF Publisher
  * Description:       Mengekspor konten WordPress menjadi bundle Open Knowledge Format (OKF v0.1) yang tersaji di /okf/ untuk dikonsumsi aplikasi AI.
- * Version:           0.3.0
+ * Version:           0.4.0
  * Update URI:        https://github.com/robithadani/okf-publisher
  * Author:            Sitespirit
  * Requires at least: 6.2
@@ -13,7 +13,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'OKF_VERSION', '0.3.0' );
+define( 'OKF_VERSION', '0.4.0' );
+define( 'OKF_PLUGIN_FILE', __FILE__ );
 define( 'OKF_PLUGIN_DIR', __DIR__ );
 
 require_once OKF_PLUGIN_DIR . '/includes/class-okf-markdown.php';
@@ -86,6 +87,27 @@ final class OKF_Publisher {
 		return $gen ??= new OKF_Generator( self::settings(), self::base_dir() );
 	}
 
+	/**
+	 * Path relatif di dalam bundle (file .md, atau folder bila $dir) menjadi path absolut,
+	 * atau null bila tidak valid. Dipakai penyaji /okf/ dan penjelajah di halaman admin.
+	 */
+	public static function resolve( string $rel, bool $dir = false ): ?string {
+		$rel = trim( $rel, '/' );
+		$re  = $dir ? '#^[\w\-/]*$#u' : '#^[\w\-/]+\.md$#u';
+		if ( ! preg_match( $re, $rel ) || str_contains( $rel, '..' ) ) {
+			return null;
+		}
+		$root = realpath( self::base_dir() );
+		$real = realpath( self::base_dir() . '/' . $rel );
+		if ( $root === false || $real === false ) {
+			return null;
+		}
+		if ( $real !== $root && ! str_starts_with( $real, $root . DIRECTORY_SEPARATOR ) ) {
+			return null;
+		}
+		return $real;
+	}
+
 	/* ---------- Penyajian /okf/* ---------- */
 
 	public function add_rewrite(): void {
@@ -140,16 +162,8 @@ final class OKF_Publisher {
 			$rel .= '/index.md'; // URL direktori: sajikan index-nya.
 		}
 
-		// Hanya file .md, tanpa path traversal.
-		if ( ! preg_match( '#^[\w\-/]+\.md$#u', $rel ) || str_contains( $rel, '..' ) ) {
-			status_header( 404 );
-			exit( 'OKF: not found.' );
-		}
-
-		$file = self::base_dir() . '/' . $rel;
-		$real = realpath( $file );
-		$root = realpath( self::base_dir() );
-		if ( $real === false || $root === false || ! str_starts_with( $real, $root . DIRECTORY_SEPARATOR ) ) {
+		$real = self::resolve( $rel );
+		if ( $real === null || ! is_file( $real ) ) {
 			status_header( 404 );
 			exit( 'OKF: not found.' );
 		}
