@@ -33,7 +33,10 @@ class OKF_Markdown {
 
 	private static function walk( DOMNode $node, int $list_depth = 0, string $list_type = 'ul' ): string {
 		if ( $node instanceof DOMText ) {
-			return preg_replace( '/\s+/u', ' ', $node->nodeValue );
+			$t    = preg_replace( '/\s+/u', ' ', $node->nodeValue );
+			$prev = $node->previousSibling;
+			// Teks tepat setelah <br> tidak boleh diawali spasi (sisa spasi HTML), tapi indentasi list tidak disentuh.
+			return ( $prev instanceof DOMElement && strtolower( $prev->nodeName ) === 'br' ) ? ltrim( $t ) : $t;
 		}
 		if ( ! $node instanceof DOMElement && ! $node instanceof DOMDocumentFragment && $node->nodeName !== 'body' ) {
 			return '';
@@ -56,7 +59,7 @@ class OKF_Markdown {
 				return "\n\n" . trim( $children() ) . "\n\n";
 
 			case 'br':
-				return "  \n";
+				return "\n";
 
 			case 'hr':
 				return "\n\n---\n\n";

@@ -48,6 +48,10 @@ wp okf rebuild    # bangun ulang seluruh bundle
 wp okf validate   # cek setiap file punya frontmatter + field `type` (jalankan setelah rebuild sebagai smoke test)
 ```
 
+## Riwayat perubahan (`log.md`)
+
+Bila dinyalakan, `log.md` mencatat satu baris setiap dokumen ditulis, dipindah, atau dihapus saat post disimpan, dan **satu baris ringkasan** per rebuild penuh (bukan satu baris per dokumen). Ukurannya dibatasi 256 KB, dan log dari versi lama otomatis dimigrasi dan dipangkas.
+
 ## Hook untuk developer
 
 ```php

@@ -8,6 +8,9 @@ defined( 'ABSPATH' ) || exit;
 
 class OKF_Generator {
 
+	/** Saat true, log() tidak menulis (dipakai selama rebuild massal). */
+	private bool $quiet = false;
+
 	public function __construct(
 		private array $settings,
 		private string $base_dir
@@ -148,19 +151,22 @@ class OKF_Generator {
 
 	/** Proses satu irisan post; aman dipanggil berulang lintas request (AJAX/CLI). */
 	public function rebuild_batch( int $offset, int $limit ): int {
-		$done = 0;
+		$done        = 0;
+		$this->quiet = true;
 		foreach ( array_slice( $this->post_ids(), $offset, $limit ) as $id ) {
 			$post = get_post( $id );
 			if ( $post && $this->generate_post( $post ) ) {
 				$done++;
 			}
 		}
+		$this->quiet = false;
 		wp_cache_flush_runtime(); // hanya cache dalam-request; wp_cache_flush() mengosongkan Redis/LiteSpeed milik seluruh situs
 		return $done;
 	}
 
 	public function finish_rebuild( int $count ): void {
 		$this->regenerate_indexes();
+		$this->log( 'rebuild penuh: ' . $count . ' dokumen' );
 		update_option( 'okf_status', [ 'count' => $count, 'built_at' => time() ], false );
 	}
 
@@ -325,13 +331,18 @@ class OKF_Generator {
 	}
 
 	private function log( string $line ): void {
-		if ( empty( $this->settings['enable_log'] ) ) {
+		if ( $this->quiet || empty( $this->settings['enable_log'] ) ) {
 			return;
 		}
 		$this->protect();
-		$file = $this->base_dir . '/log.md';
+		$file   = $this->base_dir . '/log.md';
+		$header = implode( "\n", [ '---', 'type: "Log"', 'title: "Riwayat perubahan"', '---', '', '' ] );
 		if ( ! is_file( $file ) ) {
-			file_put_contents( $file, implode( "\n", [ '---', 'type: "Log"', 'title: "Riwayat perubahan"', '---', '', '' ] ) );
+			file_put_contents( $file, $header );
+		} elseif ( file_get_contents( $file, false, null, 0, 3 ) !== '---' ) {
+			// ponytail: log versi lama (tanpa frontmatter, penuh entri per-dokumen dari rebuild); simpan 200 baris terakhir
+			$lines = file( $file, FILE_IGNORE_NEW_LINES );
+			file_put_contents( $file, $header . implode( "\n", array_slice( $lines, -200 ) ) . "\n" );
 		} elseif ( filesize( $file ) > 262144 ) {
 			// ponytail: batas 256 KB; simpan header + 1000 baris terakhir, tanpa rotasi arsip
 			$lines = file( $file, FILE_IGNORE_NEW_LINES );
