@@ -1,8 +1,8 @@
-﻿<?php
+<?php
 /**
  * Plugin Name:       OKF Publisher
  * Description:       Mengekspor konten WordPress menjadi bundle Open Knowledge Format (OKF v0.1) yang tersaji di /okf/ untuk dikonsumsi aplikasi AI.
- * Version:           0.2.0
+ * Version:           0.2.1
  * Author:            Sitespirit
  * Requires at least: 6.2
  * Requires PHP:      8.0
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'OKF_VERSION', '0.2.0' );
+define( 'OKF_VERSION', '0.2.1' );
 define( 'OKF_PLUGIN_DIR', __DIR__ );
 
 require_once OKF_PLUGIN_DIR . '/includes/class-okf-markdown.php';
@@ -76,12 +76,18 @@ final class OKF_Publisher {
 
 	public function add_rewrite(): void {
 		add_rewrite_rule( '^okf/?(.*)$', 'index.php?okf_path=$matches[1]', 'top' );
-		add_rewrite_rule( '^llms\.txt$', 'index.php?okf_llms=1', 'top' );
 
-		// Flush otomatis sekali setiap update versi, tanpa perlu re-save permalink manual.
-		if ( get_option( 'okf_version' ) !== OKF_VERSION ) {
+		// Daftarkan hanya bila diaktifkan, agar tidak menimpa llms.txt plugin lain (mis. Rank Math).
+		$llms = ! empty( self::settings()['enable_llms'] );
+		if ( $llms ) {
+			add_rewrite_rule( '^llms\.txt$', 'index.php?okf_llms=1', 'top' );
+		}
+
+		// Flush otomatis saat versi atau status opsi llms.txt berubah, tanpa re-save permalink manual.
+		$sig = OKF_VERSION . ':' . (int) $llms;
+		if ( get_option( 'okf_version' ) !== $sig ) {
 			flush_rewrite_rules();
-			update_option( 'okf_version', OKF_VERSION, false );
+			update_option( 'okf_version', $sig, false );
 		}
 	}
 

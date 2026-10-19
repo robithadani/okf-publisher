@@ -146,7 +146,7 @@ class OKF_Generator {
 				$done++;
 			}
 		}
-		wp_cache_flush(); // lepas object cache agar memori tidak menumpuk
+		wp_cache_flush_runtime(); // hanya cache dalam-request; wp_cache_flush() mengosongkan Redis/LiteSpeed milik seluruh situs
 		return $done;
 	}
 
