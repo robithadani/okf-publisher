@@ -44,7 +44,10 @@ class OKF_Editor {
 		if ( $post->post_status !== 'publish' ) {
 			return [ 'off', 'Belum terbit', '' ];
 		}
-		if ( apply_filters( 'okf_exclude_post', false, $post ) ) {
+		if ( $post->post_password !== '' ) {
+			return [ 'off', 'Berpassword', '' ];
+		}
+		if ( OKF_Publisher::generator()->is_excluded( $post ) ) {
 			return [ 'off', 'Dikecualikan', '' ];
 		}
 		$rel = (string) get_post_meta( $post->ID, '_okf_path', true );
@@ -127,6 +130,8 @@ class OKF_Editor {
 				<?php endif; ?></p>
 			<?php elseif ( $code === 'warn' ) : ?>
 				<p class="description">Post ini akan masuk bundle saat disimpan, atau setelah rebuild.</p>
+			<?php elseif ( $post->post_password !== '' ) : ?>
+				<p class="description">Post berpassword tidak pernah masuk bundle OKF.</p>
 			<?php endif; ?>
 			<?php if ( $fm !== '' ) : ?>
 				<details>

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       OKF Publisher
  * Description:       Mengekspor konten WordPress menjadi bundle Open Knowledge Format (OKF v0.1) yang tersaji di /okf/ untuk dikonsumsi aplikasi AI.
- * Version:           0.5.1
+ * Version:           0.5.2
  * Update URI:        https://github.com/robithadani/okf-publisher
  * Author:            Sitespirit
  * Requires at least: 6.2
@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'OKF_VERSION', '0.5.1' );
+define( 'OKF_VERSION', '0.5.2' );
 define( 'OKF_PLUGIN_FILE', __FILE__ );
 define( 'OKF_PLUGIN_DIR', __DIR__ );
 

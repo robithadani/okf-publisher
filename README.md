@@ -35,7 +35,8 @@ Beri aplikasi AI klien satu URL: `https://situs.com/okf/index.md`. Agent membaca
 - **Folder bundle ber-token acak** (`wp-content/uploads/okf-<token>/`) dengan `.htaccess` penolak akses langsung, sehingga file tidak bisa dibuka lewat URL `uploads/` dan melewati pengecekan key. Di nginx, `.htaccess` diabaikan; nama folder acak menjadi perlindungan utamanya. Pembaruan dari v0.1/0.2 memindahkan folder lama otomatis.
 - Respons bundle membawa `X-Robots-Tag: noindex, nofollow` agar tidak terindeks sebagai duplikat konten. Ubah lewat filter `okf_robots_header` (kembalikan string kosong untuk mematikan).
 - Header `Update URI` menunjuk ke repo ini, sehingga WordPress tidak menawarkan update dari plugin lain di wordpress.org yang kebetulan bernama sama.
-- Belum ditangani: post berpassword dan konten khusus member ikut terekspor sebagai konten publik.
+- **Post berpassword selalu dikecualikan** dari bundle (tidak bisa ditimpa filter); file yang sudah ada dihapus saat post diberi password. Link dari dokumen lain ke post yang dikecualikan dibiarkan sebagai URL biasa.
+- Belum ditangani: konten khusus member (plugin membership) ikut terekspor sebagai konten publik.
 
 ## Discoverability (opsional)
 

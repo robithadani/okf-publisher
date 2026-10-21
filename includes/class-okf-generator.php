@@ -18,11 +18,19 @@ class OKF_Generator {
 
 	/* ---------- Dokumen per post ---------- */
 
+	/**
+	 * Post yang tidak boleh masuk bundle. Post berpassword selalu dikecualikan dan tidak bisa
+	 * ditimpa filter (soal keamanan); sisanya mengikuti filter okf_exclude_post (termasuk panel editor).
+	 */
+	public function is_excluded( WP_Post $post ): bool {
+		return $post->post_password !== '' || (bool) apply_filters( 'okf_exclude_post', false, $post );
+	}
+
 	public function generate_post( WP_Post $post ): bool {
 		if ( $post->post_status !== 'publish' ) {
 			return false;
 		}
-		if ( apply_filters( 'okf_exclude_post', false, $post ) ) {
+		if ( $this->is_excluded( $post ) ) {
 			$this->delete_post_file( $post ); // post yang baru dikecualikan harus hilang dari bundle
 			return false;
 		}
@@ -124,7 +132,7 @@ class OKF_Generator {
 		$body = '# ' . $obj->labels->name . "\n\n";
 		foreach ( $ids as $id ) {
 			$p = get_post( $id );
-			if ( ! $p || apply_filters( 'okf_exclude_post', false, $p ) ) {
+			if ( ! $p || $this->is_excluded( $p ) ) {
 				continue;
 			}
 			$body .= sprintf( "- [%s](/%s) — %s\n", $p->post_title, $this->post_path( $p ), $this->description( $p ) );
@@ -298,7 +306,8 @@ class OKF_Generator {
 				$post = get_post( $post_id );
 				if ( ! $post
 					|| $post->post_status !== 'publish'
-					|| ! in_array( $post->post_type, $this->settings['post_types'], true ) ) {
+					|| ! in_array( $post->post_type, $this->settings['post_types'], true )
+					|| $this->is_excluded( $post ) ) {
 					return $m[0];
 				}
 				return '(/' . $this->post_path( $post ) . ')';
